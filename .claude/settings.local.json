@@ -3,7 +3,8 @@
     "allow": [
       "Bash(mvn clean:*)",
       "Bash(where mvn:*)",
-      "Bash(mvn dependency:tree)"
+      "Bash(mvn dependency:tree)",
+      "Bash(git rm:*)"
     ]
   }
 }

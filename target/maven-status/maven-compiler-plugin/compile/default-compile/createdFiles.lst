@@ -1,7 +1,0 @@
-com\example\usermanage\service\impl\UserServiceImpl.class
-com\example\usermanage\controller\UserController.class
-com\example\usermanage\entity\User.class
-com\example\usermanage\mapper\UserMapper.class
-com\example\usermanage\UserManageApplication.class
-com\example\usermanage\config\Knife4jConfig.class
-com\example\usermanage\service\UserService.class
