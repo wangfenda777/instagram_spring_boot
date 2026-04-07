@@ -24,6 +24,10 @@ mybatis-plus:
 server:
   port: 8081
 
+upload:
+  path: /data/instagram/uploads/
+  url-prefix: /uploads
+
 springdoc:
   api-docs:
     enabled: true
