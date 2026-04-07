@@ -5,7 +5,8 @@
       "Bash(where mvn:*)",
       "Bash(mvn dependency:tree)",
       "Bash(git rm:*)",
-      "Skill(instagram-dev)"
+      "Skill(instagram-dev)",
+      "Bash(curl:*)"
     ]
   }
 }

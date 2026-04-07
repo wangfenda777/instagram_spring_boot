@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
             throw BusinessException.badRequest("账号不存在");
         }
 
-        if (!PasswordUtil.matches(dto.getPassword(), user.getPassword())) {
+        if (!dto.getPassword().equals(user.getPassword())) {
             throw BusinessException.badRequest("密码错误");
         }
 
