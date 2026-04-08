@@ -1,16 +1,20 @@
 package com.example.instagram.module.follow.controller;
 
+import com.example.instagram.common.result.PageResult;
 import com.example.instagram.common.result.Result;
 import com.example.instagram.module.follow.dto.FollowDTO;
 import com.example.instagram.module.follow.service.FollowService;
+import com.example.instagram.module.follow.vo.FollowUserVO;
 import com.example.instagram.module.follow.vo.FollowVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -31,5 +35,23 @@ public class FollowController {
     @PostMapping("/unfollow")
     public Result<FollowVO> unfollow(@Valid @RequestBody FollowDTO dto) {
         return Result.success("取消关注成功", followService.unfollow(dto));
+    }
+
+    @Operation(summary = "查询用户粉丝列表")
+    @GetMapping("/followers")
+    public Result<PageResult<FollowUserVO>> pageFollowers(
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer pageSize) {
+        return Result.success(followService.pageFollowers(userId, page, pageSize));
+    }
+
+    @Operation(summary = "查询用户关注列表")
+    @GetMapping("/following")
+    public Result<PageResult<FollowUserVO>> pageFollowing(
+            @RequestParam Long userId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer pageSize) {
+        return Result.success(followService.pageFollowing(userId, page, pageSize));
     }
 }
