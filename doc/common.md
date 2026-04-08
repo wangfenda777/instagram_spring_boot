@@ -382,6 +382,179 @@
 
 ---
 
+## 13. 发布帖子
+
+### 请求信息
+- **接口地址**: `POST /api/post/create`
+- **接口说明**: 发布一条新帖子，需先通过上传接口获取图片 URL，再将 URL 列表传入
+
+### 请求头
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| Authorization | string | 是 | Bearer {token} |
+
+### 请求参数
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| content | string | 否 | 帖子文案 |
+| location | string | 否 | 位置信息 |
+| mediaType | string | 是 | 媒体类型：image / video |
+| mediaUrls | array | 是 | 媒体 URL 列表（至少一项） |
+
+### 请求示例
+```json
+{
+  "content": "今天天气真好",
+  "location": "上海",
+  "mediaType": "image",
+  "mediaUrls": [
+    "/uploads/abc123.jpg",
+    "/uploads/def456.jpg"
+  ]
+}
+```
+
+### 响应数据
+```json
+{
+  "code": 200,
+  "message": "发布成功",
+  "data": {
+    "postId": "2010",
+    "userId": "1001",
+    "username": "qiwang6189",
+    "avatar": "https://cdn.example.com/avatar/1.jpg",
+    "isVerified": false,
+    "location": "上海",
+    "content": "今天天气真好",
+    "mediaType": "image",
+    "mediaList": [
+      { "url": "/uploads/abc123.jpg", "type": "image" },
+      { "url": "/uploads/def456.jpg", "type": "image" }
+    ],
+    "mediaCount": 2,
+    "likesCount": 0,
+    "commentsCount": 0,
+    "sharesCount": 0,
+    "isLiked": false,
+    "isSaved": false,
+    "isFollowing": false,
+    "createdAt": 1711987200000
+  }
+}
+```
+
+---
+
+## 14. 编辑帖子
+
+### 请求信息
+- **接口地址**: `POST /api/post/update`
+- **接口说明**: 编辑自己的帖子，可修改文案和位置信息
+
+### 请求头
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| Authorization | string | 是 | Bearer {token} |
+
+### 请求参数
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| postId | number | 是 | 帖子 ID |
+| content | string | 否 | 新的文案内容 |
+| location | string | 否 | 新的位置信息 |
+
+### 请求示例
+```json
+{
+  "postId": 2010,
+  "content": "修改后的文案",
+  "location": "北京"
+}
+```
+
+### 响应数据
+```json
+{
+  "code": 200,
+  "message": "编辑成功",
+  "data": null
+}
+```
+
+---
+
+## 15. 删除帖子
+
+### 请求信息
+- **接口地址**: `POST /api/post/delete`
+- **接口说明**: 删除自己的帖子（逻辑删除），只能删除自己发布的帖子
+
+### 请求头
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| Authorization | string | 是 | Bearer {token} |
+
+### 请求参数
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| postId | number | 是 | 帖子 ID |
+
+### 请求示例
+```json
+{
+  "postId": 2010
+}
+```
+
+### 响应数据
+```json
+{
+  "code": 200,
+  "message": "删除成功",
+  "data": null
+}
+```
+
+---
+
+## 16. 上传图片
+
+### 请求信息
+- **接口地址**: `POST /api/upload/image`
+- **接口说明**: 上传图片文件，支持 jpg/png/gif/webp 格式。上传成功后返回图片访问 URL，可用于发布帖子等场景。
+
+### 请求头
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| Authorization | string | 是 | Bearer {token} |
+| Content-Type | string | 是 | multipart/form-data |
+
+### 请求参数（form-data）
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| file | file | 是 | 图片文件（jpg/png/gif/webp） |
+
+### 响应数据
+```json
+{
+  "code": 200,
+  "message": "上传成功",
+  "data": {
+    "url": "/uploads/a1b2c3d4e5f6.jpg",
+    "originalName": "photo.jpg"
+  }
+}
+```
+
+### 响应字段说明
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| url | string | 文件访问路径，可直接拼接域名访问 |
+| originalName | string | 原始文件名 |
+
+---
+
 ## 错误码说明
 
 | 错误码 | 说明 |

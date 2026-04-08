@@ -7,7 +7,9 @@ import com.example.instagram.common.result.PageResult;
 import com.example.instagram.common.utils.UserContext;
 import com.example.instagram.module.follow.entity.Follow;
 import com.example.instagram.module.follow.mapper.FollowMapper;
+import com.example.instagram.module.post.dto.PostCreateDTO;
 import com.example.instagram.module.post.dto.PostIdDTO;
+import com.example.instagram.module.post.dto.PostUpdateDTO;
 import com.example.instagram.module.post.entity.Post;
 import com.example.instagram.module.post.entity.PostLike;
 import com.example.instagram.module.post.entity.PostMedia;
@@ -27,9 +29,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -54,10 +56,80 @@ public class PostServiceImpl implements PostService {
     private FollowMapper followMapper;
 
     @Override
+    @Transactional
+    public PostFeedVO createPost(PostCreateDTO dto) {
+        Long currentUserId = UserContext.getCurrentUserId();
+
+        Post post = new Post();
+        post.setUserId(currentUserId);
+        post.setContent(dto.getContent());
+        post.setLocation(dto.getLocation());
+        post.setMediaType(dto.getMediaType());
+        post.setMediaCount(dto.getMediaUrls().size());
+        post.setCoverUrl(dto.getMediaUrls().get(0));
+        post.setLikesCount(0);
+        post.setCommentsCount(0);
+        post.setSharesCount(0);
+        post.setViewsCount(0);
+        post.setIsDeleted(0);
+        post.setCreatedAt(LocalDateTime.now());
+        post.setUpdatedAt(LocalDateTime.now());
+        postMapper.insert(post);
+
+        // 重新查询获取数据库生成的时间戳
+        post = postMapper.selectById(post.getId());
+
+        for (int i = 0; i < dto.getMediaUrls().size(); i++) {
+            PostMedia media = new PostMedia();
+            media.setPostId(post.getId());
+            media.setMediaUrl(dto.getMediaUrls().get(i));
+            media.setMediaType(dto.getMediaType());
+            media.setSortOrder(i);
+            media.setCreatedAt(LocalDateTime.now());
+            postMediaMapper.insert(media);
+        }
+
+        return buildPostFeedVO(post, currentUserId);
+    }
+
+    @Override
+    @Transactional
+    public void updatePost(PostUpdateDTO dto) {
+        Long currentUserId = UserContext.getCurrentUserId();
+        Post post = postMapper.selectById(dto.getPostId());
+        if (post == null) {
+            throw BusinessException.notFound("帖子不存在");
+        }
+        if (!post.getUserId().equals(currentUserId)) {
+            throw BusinessException.badRequest("只能编辑自己的帖子");
+        }
+        if (dto.getContent() != null) {
+            post.setContent(dto.getContent());
+        }
+        if (dto.getLocation() != null) {
+            post.setLocation(dto.getLocation());
+        }
+        postMapper.updateById(post);
+    }
+
+    @Override
+    @Transactional
+    public void deletePost(PostIdDTO dto) {
+        Long currentUserId = UserContext.getCurrentUserId();
+        Post post = postMapper.selectById(dto.getPostId());
+        if (post == null) {
+            throw BusinessException.notFound("帖子不存在");
+        }
+        if (!post.getUserId().equals(currentUserId)) {
+            throw BusinessException.badRequest("只能删除自己的帖子");
+        }
+        postMapper.deleteById(dto.getPostId());
+    }
+
+    @Override
     public PageResult<PostFeedVO> pagePostFeed(Integer page, Integer pageSize) {
         Long currentUserId = UserContext.getCurrentUserId();
 
-        // 查询帖子（简单实现：按时间倒序）
         Page<Post> postPage = new Page<>(page, pageSize);
         postMapper.selectPage(postPage, new LambdaQueryWrapper<Post>()
                 .orderByDesc(Post::getCreatedAt));
@@ -85,7 +157,6 @@ public class PostServiceImpl implements PostService {
         Long currentUserId = UserContext.getCurrentUserId();
         Long postId = dto.getPostId();
 
-        // 检查是否已点赞
         Long count = postLikeMapper.selectCount(new LambdaQueryWrapper<PostLike>()
                 .eq(PostLike::getPostId, postId)
                 .eq(PostLike::getUserId, currentUserId));
@@ -93,13 +164,11 @@ public class PostServiceImpl implements PostService {
             throw BusinessException.conflict("已点赞");
         }
 
-        // 插入点赞记录
         PostLike postLike = new PostLike();
         postLike.setPostId(postId);
         postLike.setUserId(currentUserId);
         postLikeMapper.insert(postLike);
 
-        // 更新帖子点赞数
         Post post = postMapper.selectById(postId);
         post.setLikesCount(post.getLikesCount() + 1);
         postMapper.updateById(post);
@@ -120,7 +189,6 @@ public class PostServiceImpl implements PostService {
                 .eq(PostLike::getPostId, postId)
                 .eq(PostLike::getUserId, currentUserId));
 
-        // 更新帖子点赞数
         Post post = postMapper.selectById(postId);
         post.setLikesCount(Math.max(0, post.getLikesCount() - 1));
         postMapper.updateById(post);
@@ -186,7 +254,6 @@ public class PostServiceImpl implements PostService {
         vo.setCommentsCount(post.getCommentsCount());
         vo.setSharesCount(post.getSharesCount());
 
-        // 查询媒体列表
         List<PostMedia> mediaList = postMediaMapper.selectList(new LambdaQueryWrapper<PostMedia>()
                 .eq(PostMedia::getPostId, post.getId())
                 .orderByAsc(PostMedia::getSortOrder));
@@ -197,7 +264,6 @@ public class PostServiceImpl implements PostService {
             return item;
         }).collect(Collectors.toList()));
 
-        // 查询当前用户互动状态
         vo.setIsLiked(postLikeMapper.selectCount(new LambdaQueryWrapper<PostLike>()
                 .eq(PostLike::getPostId, post.getId())
                 .eq(PostLike::getUserId, currentUserId)) > 0);
@@ -210,7 +276,9 @@ public class PostServiceImpl implements PostService {
                 .eq(Follow::getFollowerId, currentUserId)
                 .eq(Follow::getFollowingId, post.getUserId())) > 0);
 
-        vo.setCreatedAt(post.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+        vo.setCreatedAt(post.getCreatedAt() != null
+                ? post.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                : System.currentTimeMillis());
         return vo;
     }
 }

@@ -2,7 +2,9 @@ package com.example.instagram.module.post.controller;
 
 import com.example.instagram.common.result.PageResult;
 import com.example.instagram.common.result.Result;
+import com.example.instagram.module.post.dto.PostCreateDTO;
 import com.example.instagram.module.post.dto.PostIdDTO;
+import com.example.instagram.module.post.dto.PostUpdateDTO;
 import com.example.instagram.module.post.service.PostService;
 import com.example.instagram.module.post.vo.PostFeedVO;
 import com.example.instagram.module.post.vo.PostLikeVO;
@@ -20,6 +22,26 @@ public class PostController {
 
     @Autowired
     private PostService postService;
+
+    @Operation(summary = "发布帖子")
+    @PostMapping("/create")
+    public Result<PostFeedVO> createPost(@Valid @RequestBody PostCreateDTO dto) {
+        return Result.success("发布成功", postService.createPost(dto));
+    }
+
+    @Operation(summary = "编辑帖子")
+    @PostMapping("/update")
+    public Result<Void> updatePost(@Valid @RequestBody PostUpdateDTO dto) {
+        postService.updatePost(dto);
+        return Result.success("编辑成功", null);
+    }
+
+    @Operation(summary = "删除帖子")
+    @PostMapping("/delete")
+    public Result<Void> deletePost(@Valid @RequestBody PostIdDTO dto) {
+        postService.deletePost(dto);
+        return Result.success("删除成功", null);
+    }
 
     @Operation(summary = "获取首页帖子 Feed 流")
     @GetMapping("/feed")
