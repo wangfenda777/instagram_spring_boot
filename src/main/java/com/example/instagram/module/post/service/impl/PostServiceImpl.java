@@ -132,6 +132,7 @@ public class PostServiceImpl implements PostService {
 
         Page<Post> postPage = new Page<>(page, pageSize);
         postMapper.selectPage(postPage, new LambdaQueryWrapper<Post>()
+                .ne(Post::getUserId, currentUserId)
                 .orderByDesc(Post::getCreatedAt));
 
         List<PostFeedVO> list = postPage.getRecords().stream()
