@@ -123,7 +123,7 @@
   "avatar": "https://cdn.example.com/avatar/1.jpg",
   "isVerified": false,
   "location": "Beijing, China",
-  "content": "帖子内容文字",
+  "content": "帖子内容文字 #travel #food",
   "mediaType": "image",
   "mediaList": [
     {
@@ -131,6 +131,14 @@
       "width": 1080,
       "height": 1080,
       "type": "image"
+    }
+  ],
+  "tags": [
+    {
+      "tagId": "1",
+      "name": "#travel",
+      "heat": 128,
+      "postCount": 35
     }
   ],
   "createdAt": 1711987200000
@@ -149,9 +157,29 @@
 | content | string | 帖子内容 |
 | mediaType | string | 媒体类型：image/video |
 | mediaList | array | 媒体列表 |
+| tags | array | 帖子关联的标签列表 |
 | createdAt | number | 发布时间戳 |
 
-### 2.4 帖子统计信息（PostStats）
+### 2.4 标签信息（Tag）
+
+```json
+{
+  "tagId": "1",
+  "name": "#travel",
+  "heat": 128,
+  "postCount": 35
+}
+```
+
+**字段说明**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| tagId | string | 标签 ID |
+| name | string | 标签名称，统一带 `#` 前缀返回 |
+| heat | number | 标签热度 |
+| postCount | number | 关联帖子数 |
+
+### 2.5 帖子统计信息（PostStats）
 
 ```json
 {

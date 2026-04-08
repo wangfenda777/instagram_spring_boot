@@ -1,5 +1,6 @@
 package com.example.instagram.module.post.vo;
 
+import com.example.instagram.module.tag.vo.TagVO;
 import lombok.Data;
 
 import java.util.List;
@@ -23,5 +24,6 @@ public class PostFeedVO {
     private Boolean isLiked;
     private Boolean isSaved;
     private Boolean isFollowing;
+    private List<TagVO> tags;
     private Long createdAt;
 }

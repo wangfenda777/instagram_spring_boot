@@ -424,7 +424,92 @@ CREATE TABLE `comments` (
 
 ---
 
-### 2.11 刷新令牌表 (refresh_tokens)
+### 2.11 标签表 (tag)
+
+**表说明**：存储所有用户在帖子内容中创建或使用过的话题标签，如 `travel`、`food`、`fashion`。用于标签搜索、热门话题统计与推荐。
+
+```sql
+CREATE TABLE `tag` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '标签ID',
+  `name` VARCHAR(100) NOT NULL COMMENT '标签名，唯一，不带#，统一小写存储',
+  `heat` INT DEFAULT 0 COMMENT '标签热度',
+  `post_count` INT DEFAULT 0 COMMENT '关联帖子数（冗余字段）',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_name` (`name`),
+  KEY `idx_heat` (`heat`),
+  KEY `idx_post_count` (`post_count`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标签表';
+```
+
+**字段说明**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | BIGINT | 标签ID，主键自增 |
+| name | VARCHAR(100) | 标签名称，不带 `#`，统一小写 |
+| heat | INT | 标签热度 |
+| post_count | INT | 关联帖子数 |
+
+---
+
+### 2.12 帖子标签关联表 (post_tag)
+
+**表说明**：建立帖子与标签的多对多关系，一条帖子可关联多个标签，一个标签也可关联多条帖子。
+
+```sql
+CREATE TABLE `post_tag` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '关联ID',
+  `post_id` BIGINT UNSIGNED NOT NULL COMMENT '帖子ID',
+  `tag_id` BIGINT UNSIGNED NOT NULL COMMENT '标签ID',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_post_tag` (`post_id`, `tag_id`),
+  KEY `idx_post_id` (`post_id`),
+  KEY `idx_tag_id` (`tag_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='帖子标签关联表';
+```
+
+**字段说明**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | BIGINT | 关联ID，主键自增 |
+| post_id | BIGINT | 帖子ID |
+| tag_id | BIGINT | 标签ID |
+| created_at | TIMESTAMP | 关联创建时间 |
+
+---
+
+### 2.13 标签搜索记录表 (tag_search_history)
+
+**表说明**：记录用户搜索过的标签，用于搜索推荐、最近搜索与标签热度统计。
+
+```sql
+CREATE TABLE `tag_search_history` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT '搜索记录ID',
+  `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
+  `keyword` VARCHAR(100) NOT NULL COMMENT '搜索关键词（小写）',
+  `search_count` INT DEFAULT 1 COMMENT '累计搜索次数',
+  `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_keyword` (`user_id`, `keyword`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_keyword` (`keyword`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='标签搜索历史';
+```
+
+**字段说明**：
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| id | BIGINT | 搜索记录ID，主键自增 |
+| user_id | BIGINT | 用户ID |
+| keyword | VARCHAR(100) | 搜索关键词（统一小写存储） |
+| search_count | INT | 累计搜索次数 |
+
+---
+
+### 2.14 刷新令牌表 (refresh_tokens)
 
 **表说明**：存储用户的刷新令牌，用于 token 刷新机制
 
@@ -470,13 +555,18 @@ users (用户表)
   ├── 1:N → post_likes (点赞表)
   ├── 1:N → post_saves (收藏表)
   ├── 1:N → comments (评论表)
-  └── 1:N → refresh_tokens (刷新令牌表)
+  ├── 1:N → refresh_tokens (刷新令牌表)
+  └── 1:N → tag_search_history (标签搜索记录表)
 
 posts (帖子表)
   ├── 1:N → post_media (媒体表)
   ├── 1:N → post_likes (点赞表)
   ├── 1:N → post_saves (收藏表)
-  └── 1:N → comments (评论表)
+  ├── 1:N → comments (评论表)
+  └── 1:N → post_tag (帖子标签关联表)
+
+tag (标签表)
+  └── 1:N → post_tag (帖子标签关联表)
 
 stories (快拍表)
   └── 1:N → story_views (快拍阅读记录表)
@@ -497,6 +587,8 @@ comments (评论表)
 8. **用户与收藏**：多对多关系，通过 `post_saves` 表实现
 9. **帖子与评论**：一对多关系，一个帖子可以有多条评论
 10. **评论与回复**：自关联关系，通过 `parent_id` 实现评论的回复
+11. **帖子与标签**：多对多关系，通过 `post_tag` 表实现
+12. **用户与标签搜索记录**：一对多关系，一个用户可以有多条标签搜索记录
 
 ---
 
@@ -514,6 +606,9 @@ comments (评论表)
 - `post_saves.post_id + user_id`：防止重复收藏
 - `story_views.story_id + user_id`：防止重复阅读记录
 - `refresh_tokens.token`：令牌唯一
+- `tag.name`：标签名唯一
+- `post_tag.post_id + tag_id`：防止帖子重复关联同一标签
+- `tag_search_history.user_id + keyword`：同一用户对同一搜索词保留一条历史记录
 
 ### 4.3 普通索引
 - `posts.user_id`：查询某用户的帖子列表
@@ -525,6 +620,12 @@ comments (评论表)
 - `notifications.created_at`：按时间排序通知列表
 - `comments.post_id`：查询帖子的评论列表
 - `comments.user_id`：查询某用户的评论
+- `tag.heat`：热门标签排序
+- `tag.post_count`：按关联帖子数排序标签
+- `post_tag.post_id`：查询帖子关联标签
+- `post_tag.tag_id`：按标签查询帖子
+- `tag_search_history.user_id`：查询用户最近搜索标签
+- `tag_search_history.keyword`：按搜索词聚合或检索历史
 
 ---
 
@@ -549,7 +650,10 @@ USE `instagram_db`;
 -- 8. post_likes
 -- 9. post_saves
 -- 10. comments
--- 11. refresh_tokens
+-- 11. tag
+-- 12. post_tag
+-- 13. tag_search_history
+-- 14. refresh_tokens
 ```
 
 ---
@@ -559,6 +663,7 @@ USE `instagram_db`;
 ### 6.1 冗余字段设计
 - `users` 表中的 `posts_count`、`followers_count`、`following_count` 为冗余统计字段
 - `posts` 表中的 `likes_count`、`comments_count`、`shares_count` 为冗余统计字段
+- `tag` 表中的 `post_count`、`heat` 为冗余统计字段
 - 冗余字段通过触发器或应用层代码维护，避免频繁 COUNT 查询
 
 ### 6.2 分页查询优化
@@ -604,7 +709,6 @@ USE `instagram_db`;
 - `follows` 表：按 `follower_id` 哈希分表
 
 ### 8.2 未来功能预留
-- 标签表（`tags`）和帖子标签关联表（`post_tags`）
 - 私信消息表（`messages`）
 - 举报表（`reports`）
 - 黑名单表（`blocks`）

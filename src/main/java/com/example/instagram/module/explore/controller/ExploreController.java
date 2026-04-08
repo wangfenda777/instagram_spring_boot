@@ -4,6 +4,7 @@ import com.example.instagram.common.result.PageResult;
 import com.example.instagram.common.result.Result;
 import com.example.instagram.module.explore.service.ExploreService;
 import com.example.instagram.module.explore.vo.ExploreItemVO;
+import com.example.instagram.module.explore.vo.SearchTagVO;
 import com.example.instagram.module.explore.vo.SearchUserVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,6 +37,15 @@ public class ExploreController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer pageSize) {
         return Result.success(exploreService.searchUser(keyword, page, pageSize));
+    }
+
+    @Operation(summary = "搜索标签")
+    @GetMapping("/search/tag")
+    public Result<PageResult<SearchTagVO>> searchTag(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer pageSize) {
+        return Result.success(exploreService.searchTag(keyword, page, pageSize));
     }
 
     @Operation(summary = "搜索帖子")

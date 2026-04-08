@@ -19,8 +19,9 @@
 - 帖子：发布、编辑、删除、Feed、详情、点赞、取消点赞、收藏、取消收藏
 - 关注：关注、取消关注
 - 快拍：关注用户的 Story Feed
-- 探索：Explore Feed、搜索用户、搜索帖子
+- 探索：Explore Feed、搜索用户、搜索帖子、搜索标签
 - 上传：图片上传
+- 标签：自动提取帖子中的 #标签、标签搜索、标签热度统计、标签搜索历史
 
 ## 项目结构
 
@@ -173,6 +174,7 @@ Authorization: Bearer <token>
 - `GET /api/explore/feed`
 - `GET /api/search/user`
 - `GET /api/search/post`
+- `GET /api/search/tag`
 - `POST /api/upload/image`
 
 ## 当前代码特征

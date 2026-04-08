@@ -23,6 +23,7 @@ import com.example.instagram.module.post.vo.MediaItemVO;
 import com.example.instagram.module.post.vo.PostFeedVO;
 import com.example.instagram.module.post.vo.PostLikeVO;
 import com.example.instagram.module.post.vo.PostSaveVO;
+import com.example.instagram.module.tag.service.TagService;
 import com.example.instagram.module.user.entity.User;
 import com.example.instagram.module.user.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,6 +55,9 @@ public class PostServiceImpl implements PostService {
 
     @Autowired
     private FollowMapper followMapper;
+
+    @Autowired
+    private TagService tagService;
 
     @Override
     @Transactional
@@ -89,6 +93,8 @@ public class PostServiceImpl implements PostService {
             postMediaMapper.insert(media);
         }
 
+        tagService.syncPostTags(post.getId(), post.getContent());
+
         return buildPostFeedVO(post, currentUserId);
     }
 
@@ -110,6 +116,7 @@ public class PostServiceImpl implements PostService {
             post.setLocation(dto.getLocation());
         }
         postMapper.updateById(post);
+        tagService.syncPostTags(post.getId(), post.getContent());
     }
 
     @Override
@@ -123,6 +130,7 @@ public class PostServiceImpl implements PostService {
         if (!post.getUserId().equals(currentUserId)) {
             throw BusinessException.badRequest("只能删除自己的帖子");
         }
+        tagService.removePostTags(dto.getPostId());
         postMapper.deleteById(dto.getPostId());
     }
 
@@ -276,6 +284,7 @@ public class PostServiceImpl implements PostService {
         vo.setIsFollowing(followMapper.selectCount(new LambdaQueryWrapper<Follow>()
                 .eq(Follow::getFollowerId, currentUserId)
                 .eq(Follow::getFollowingId, post.getUserId())) > 0);
+        vo.setTags(tagService.getTagsByPostIds(List.of(post.getId())).getOrDefault(post.getId(), List.of()));
 
         vo.setCreatedAt(post.getCreatedAt() != null
                 ? post.getCreatedAt().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()

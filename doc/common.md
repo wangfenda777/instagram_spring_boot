@@ -396,7 +396,7 @@
 ### 请求参数
 | 参数名 | 类型 | 必填 | 说明 |
 |-------|------|------|------|
-| content | string | 否 | 帖子文案 |
+| content | string | 否 | 帖子文案，可直接包含 `#travel`、`#food` 这类标签，后端会自动提取并建立标签关联 |
 | location | string | 否 | 位置信息 |
 | mediaType | string | 是 | 媒体类型：image / video |
 | mediaUrls | array | 是 | 媒体 URL 列表（至少一项） |
@@ -404,7 +404,7 @@
 ### 请求示例
 ```json
 {
-  "content": "今天天气真好",
+  "content": "今天天气真好 #travel #food",
   "location": "上海",
   "mediaType": "image",
   "mediaUrls": [
@@ -439,6 +439,10 @@
     "isLiked": false,
     "isSaved": false,
     "isFollowing": false,
+    "tags": [
+      { "tagId": "1", "name": "#travel", "heat": 12, "postCount": 3 },
+      { "tagId": "2", "name": "#food", "heat": 8, "postCount": 2 }
+    ],
     "createdAt": 1711987200000
   }
 }

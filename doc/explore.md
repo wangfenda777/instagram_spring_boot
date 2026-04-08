@@ -120,7 +120,7 @@
 
 ### 请求信息
 - **接口地址**: `GET /api/search/post`
-- **接口说明**: 根据关键词搜索帖子内容或标签（hashtag）
+- **接口说明**: 根据关键词搜索帖子内容或标签（hashtag）。当 `type=tag` 时，支持 `travel` 和 `#travel` 两种写法，后端会统一按标签搜索并记录标签热度与搜索历史。
 
 ### 请求参数（Query）
 | 参数名 | 类型 | 必填 | 说明 | 默认值 |
@@ -154,7 +154,50 @@
 
 ---
 
-## 4. 获取帖子详情
+## 4. 搜索标签
+
+### 请求信息
+- **接口地址**: `GET /api/search/tag`
+- **接口说明**: 根据关键词搜索标签，用于搜索联想和热门话题推荐。支持输入 `travel` 或 `#travel`。
+
+### 请求参数（Query）
+| 参数名 | 类型 | 必填 | 说明 | 默认值 |
+|-------|------|------|------|-------|
+| keyword | string | 是 | 标签关键词 | - |
+| page | number | 否 | 页码 | 1 |
+| pageSize | number | 否 | 每页数量 | 20 |
+
+### 响应数据
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "list": [
+      {
+        "tagId": "1",
+        "name": "#travel",
+        "heat": 128,
+        "postCount": 35
+      },
+      {
+        "tagId": "2",
+        "name": "#travelchina",
+        "heat": 42,
+        "postCount": 10
+      }
+    ],
+    "total": 2,
+    "page": 1,
+    "pageSize": 20,
+    "hasMore": false
+  }
+}
+```
+
+---
+
+## 6. 获取帖子详情
 
 ### 请求信息
 - **接口地址**: `GET /api/post/detail?postId=2001`
@@ -192,6 +235,14 @@
     "isLiked": false,
     "isSaved": false,
     "isFollowing": false,
+    "tags": [
+      {
+        "tagId": "1",
+        "name": "#travel",
+        "heat": 128,
+        "postCount": 35
+      }
+    ],
     "createdAt": 1711987200000
   }
 }
@@ -207,7 +258,8 @@
 
 用户输入关键词搜索（并行调用）
 ├── GET /api/search/user?keyword=xxx        → 搜索用户
-└── GET /api/search/post?keyword=xxx        → 搜索帖子/标签
+├── GET /api/search/tag?keyword=xxx         → 搜索标签/推荐标签
+└── GET /api/search/post?keyword=xxx        → 搜索帖子/标签关联帖子
 
 点击某个帖子
 └── GET /api/post/detail?postId=2001        → 获取帖子详情
