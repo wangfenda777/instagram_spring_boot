@@ -185,6 +185,7 @@
 {
   "postId": "2001",
   "likesCount": 12345,
+  "savedCount": 456,
   "commentsCount": 678,
   "sharesCount": 234,
   "isLiked": false,
@@ -197,6 +198,7 @@
 |-------|------|------|
 | postId | string | 帖子 ID |
 | likesCount | number | 点赞数 |
+| savedCount | number | 收藏数 |
 | commentsCount | number | 评论数 |
 | sharesCount | number | 分享数 |
 | isLiked | boolean | 当前用户是否已点赞 |

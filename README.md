@@ -181,5 +181,5 @@ Authorization: Bearer <token>
 
 - 使用 MyBatis-Plus，且 `map-underscore-to-camel-case: false`，字段命名要和数据库列保持一致
 - `AuthInterceptor` 会把当前登录用户写入 `UserContext`，service 层通过它读取当前用户 ID
-- 关注数、粉丝数、帖子点赞数等冗余统计由业务写路径维护，不是在查询时动态聚合
+- 关注数、粉丝数、帖子点赞数、帖子收藏数等冗余统计由业务写路径维护，不是在查询时动态聚合
 - 上传接口当前仅支持 `image/jpeg`、`image/png`、`image/gif`、`image/webp`

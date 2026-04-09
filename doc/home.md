@@ -98,6 +98,7 @@
         ],
         "mediaCount": 2,
         "likesCount": 315000,
+        "savedCount": 980,
         "commentsCount": 1305,
         "sharesCount": 5423,
         "isLiked": false,
@@ -128,6 +129,7 @@
 | mediaList | array | 媒体列表（图片或视频） |
 | mediaCount | number | 媒体数量 |
 | likesCount | number | 点赞数 |
+| savedCount | number | 收藏数 |
 | commentsCount | number | 评论数 |
 | sharesCount | number | 分享数 |
 | isLiked | boolean | 当前用户是否已点赞 |

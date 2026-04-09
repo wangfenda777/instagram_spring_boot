@@ -344,7 +344,8 @@
   "code": 200,
   "message": "收藏成功",
   "data": {
-    "isSaved": true
+    "isSaved": true,
+    "savedCount": 101
   }
 }
 ```
@@ -375,7 +376,8 @@
   "code": 200,
   "message": "取消收藏",
   "data": {
-    "isSaved": false
+    "isSaved": false,
+    "savedCount": 100
   }
 }
 ```
@@ -434,6 +436,7 @@
     ],
     "mediaCount": 2,
     "likesCount": 0,
+    "savedCount": 0,
     "commentsCount": 0,
     "sharesCount": 0,
     "isLiked": false,

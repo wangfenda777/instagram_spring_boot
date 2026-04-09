@@ -88,6 +88,7 @@ CREATE TABLE `posts` (
   `media_count` INT DEFAULT 1 COMMENT '媒体数量',
   `cover_url` VARCHAR(500) DEFAULT NULL COMMENT '封面图URL（用于列表展示）',
   `likes_count` INT DEFAULT 0 COMMENT '点赞数（冗余字段）',
+  `saved_count` INT DEFAULT 0 COMMENT '收藏数（冗余字段）',
   `comments_count` INT DEFAULT 0 COMMENT '评论数（冗余字段）',
   `shares_count` INT DEFAULT 0 COMMENT '分享数（冗余字段）',
   `views_count` INT DEFAULT 0 COMMENT '浏览数（视频专用）',
@@ -112,6 +113,7 @@ CREATE TABLE `posts` (
 | media_count | INT | 媒体数量 |
 | cover_url | VARCHAR(500) | 封面图（列表展示用） |
 | likes_count | INT | 点赞数（冗余统计） |
+| saved_count | INT | 收藏数（冗余统计） |
 | comments_count | INT | 评论数（冗余统计） |
 | shares_count | INT | 分享数（冗余统计） |
 | views_count | INT | 浏览数（视频专用） |
@@ -662,7 +664,7 @@ USE `instagram_db`;
 
 ### 6.1 冗余字段设计
 - `users` 表中的 `posts_count`、`followers_count`、`following_count` 为冗余统计字段
-- `posts` 表中的 `likes_count`、`comments_count`、`shares_count` 为冗余统计字段
+- `posts` 表中的 `likes_count`、`saved_count`、`comments_count`、`shares_count` 为冗余统计字段
 - `tag` 表中的 `post_count`、`heat` 为冗余统计字段
 - 冗余字段通过触发器或应用层代码维护，避免频繁 COUNT 查询
 

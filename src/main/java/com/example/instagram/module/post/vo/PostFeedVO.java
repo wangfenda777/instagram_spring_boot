@@ -19,6 +19,7 @@ public class PostFeedVO {
     private List<MediaItemVO> mediaList;
     private Integer mediaCount;
     private Integer likesCount;
+    private Integer savedCount;
     private Integer commentsCount;
     private Integer sharesCount;
     private Boolean isLiked;

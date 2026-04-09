@@ -31,6 +31,9 @@ public class Post {
     @TableField("likes_count")
     private Integer likesCount;
 
+    @TableField("saved_count")
+    private Integer savedCount;
+
     @TableField("comments_count")
     private Integer commentsCount;
 

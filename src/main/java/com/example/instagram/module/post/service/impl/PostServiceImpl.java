@@ -72,6 +72,7 @@ public class PostServiceImpl implements PostService {
         post.setMediaCount(dto.getMediaUrls().size());
         post.setCoverUrl(dto.getMediaUrls().get(0));
         post.setLikesCount(0);
+        post.setSavedCount(0);
         post.setCommentsCount(0);
         post.setSharesCount(0);
         post.setViewsCount(0);
@@ -226,8 +227,13 @@ public class PostServiceImpl implements PostService {
         postSave.setUserId(currentUserId);
         postSaveMapper.insert(postSave);
 
+        Post post = postMapper.selectById(postId);
+        post.setSavedCount((post.getSavedCount() == null ? 0 : post.getSavedCount()) + 1);
+        postMapper.updateById(post);
+
         PostSaveVO vo = new PostSaveVO();
         vo.setIsSaved(true);
+        vo.setSavedCount(post.getSavedCount());
         return vo;
     }
 
@@ -237,12 +243,24 @@ public class PostServiceImpl implements PostService {
         Long currentUserId = UserContext.getCurrentUserId();
         Long postId = dto.getPostId();
 
+        Long count = postSaveMapper.selectCount(new LambdaQueryWrapper<PostSave>()
+                .eq(PostSave::getPostId, postId)
+                .eq(PostSave::getUserId, currentUserId));
+        if (count == 0) {
+            throw BusinessException.conflict("未收藏该帖子");
+        }
+
         postSaveMapper.delete(new LambdaQueryWrapper<PostSave>()
                 .eq(PostSave::getPostId, postId)
                 .eq(PostSave::getUserId, currentUserId));
 
+        Post post = postMapper.selectById(postId);
+        post.setSavedCount(Math.max(0, (post.getSavedCount() == null ? 0 : post.getSavedCount()) - 1));
+        postMapper.updateById(post);
+
         PostSaveVO vo = new PostSaveVO();
         vo.setIsSaved(false);
+        vo.setSavedCount(post.getSavedCount());
         return vo;
     }
 
@@ -260,6 +278,7 @@ public class PostServiceImpl implements PostService {
         vo.setMediaType(post.getMediaType());
         vo.setMediaCount(post.getMediaCount());
         vo.setLikesCount(post.getLikesCount());
+        vo.setSavedCount(post.getSavedCount());
         vo.setCommentsCount(post.getCommentsCount());
         vo.setSharesCount(post.getSharesCount());
 

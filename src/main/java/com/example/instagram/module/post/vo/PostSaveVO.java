@@ -6,4 +6,5 @@ import lombok.Data;
 public class PostSaveVO {
 
     private Boolean isSaved;
+    private Integer savedCount;
 }

@@ -230,6 +230,7 @@
     ],
     "mediaCount": 1,
     "likesCount": 315000,
+    "savedCount": 980,
     "commentsCount": 1305,
     "sharesCount": 5423,
     "isLiked": false,
