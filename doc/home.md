@@ -56,8 +56,8 @@
 ## 2. 获取首页帖子 Feed 流
 
 ### 请求信息
-- **接口地址**: `GET /api/post/feed?page=1&pageSize=10`
-- **接口说明**: 获取首页推荐的帖子列表（已关注用户 + 推荐内容）。每个帖子包含基础信息、媒体内容和互动统计数据。
+- **接口地址**: `GET /api/post/feed?lastId=0&pageSize=6`
+- **接口说明**: 获取首页帖子 Feed。每次固定按“4 条关注帖 + 2 条推荐帖”目标返回；关注不足时补历史关注帖，推荐不足时补热门帖。分页基于 `lastId` 游标，而不是传统 `page` 页码。
 
 ### 请求头
 | 参数名 | 类型 | 必填 | 说明 |
@@ -67,8 +67,8 @@
 ### 请求参数（Query）
 | 参数名 | 类型 | 必填 | 说明 | 默认值 |
 |-------|------|------|------|-------|
-| page | number | 否 | 页码 | 1 |
-| pageSize | number | 否 | 每页数量 | 10 |
+| lastId | number | 否 | 分页游标。第一页传 `0`，下一页传上一次返回的 `lastId` | 0 |
+| pageSize | number | 否 | 每页数量，当前首页推荐流默认按 6 条设计 | 6 |
 
 ### 响应数据
 ```json
@@ -90,27 +90,24 @@
           {
             "url": "https://cdn.example.com/post/1.jpg",
             "type": "image"
-          },
-          {
-            "url": "https://cdn.example.com/post/2.jpg",
-            "type": "image"
           }
         ],
-        "mediaCount": 2,
+        "mediaCount": 1,
         "likesCount": 315000,
         "savedCount": 980,
         "commentsCount": 1305,
         "sharesCount": 5423,
         "isLiked": false,
         "isSaved": false,
-        "isFollowing": false,
+        "isFollowing": true,
         "createdAt": 1711987200000
       }
     ],
-    "total": 50,
+    "total": 6,
     "page": 1,
-    "pageSize": 10,
-    "hasMore": true
+    "pageSize": 6,
+    "hasMore": true,
+    "lastId": 1995
   }
 }
 ```
@@ -136,6 +133,7 @@
 | isSaved | boolean | 当前用户是否已收藏 |
 | isFollowing | boolean | 当前用户是否已关注该发布者 |
 | createdAt | number | 发布时间戳 |
+| lastId | number | 下一页继续请求时使用的游标 |
 
 ---
 
@@ -145,7 +143,14 @@
 
 ```
 页面加载
-├── GET /api/user/me              → 获取当前用户信息（显示快拍头像）
-├── GET /api/story/feed           → 获取快拍列表
-└── GET /api/post/feed?page=1     → 获取帖子列表（包含互动数据）
+├── GET /api/user/me                       → 获取当前用户信息（显示快拍头像）
+├── GET /api/story/feed                    → 获取快拍列表
+└── GET /api/post/feed?lastId=0&pageSize=6 → 获取首页首批帖子
+```
+
+继续下拉时：
+
+```
+滚动触底
+└── GET /api/post/feed?lastId=上次返回的lastId&pageSize=6
 ```

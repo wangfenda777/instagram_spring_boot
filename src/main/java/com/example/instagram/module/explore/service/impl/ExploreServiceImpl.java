@@ -39,11 +39,20 @@ public class ExploreServiceImpl implements ExploreService {
 
     @Override
     public PageResult<ExploreItemVO> pageExploreFeed(Integer page, Integer pageSize) {
-        Page<Post> postPage = new Page<>(page, pageSize);
-        postMapper.selectPage(postPage, new LambdaQueryWrapper<Post>()
-                .orderByDesc(Post::getLikesCount, Post::getCreatedAt));
+        Long currentUserId = UserContext.getCurrentUserId();
+        int finalPage = page == null || page <= 0 ? 1 : page;
+        int finalPageSize = pageSize == null || pageSize <= 0 ? 24 : pageSize;
+        int fetchLimit = finalPage * finalPageSize * 3;
 
-        List<ExploreItemVO> list = postPage.getRecords().stream().map(post -> {
+        List<Post> candidates = postMapper.selectList(new LambdaQueryWrapper<Post>()
+                .ne(Post::getUserId, currentUserId)
+                .orderByDesc(Post::getId)
+                .last("LIMIT " + fetchLimit));
+
+        java.util.Collections.shuffle(candidates);
+        int fromIndex = Math.min((finalPage - 1) * finalPageSize, candidates.size());
+        int toIndex = Math.min(fromIndex + finalPageSize, candidates.size());
+        List<ExploreItemVO> list = candidates.subList(fromIndex, toIndex).stream().map(post -> {
             ExploreItemVO vo = new ExploreItemVO();
             vo.setPostId(String.valueOf(post.getId()));
             vo.setMediaType(post.getMediaType());
@@ -52,7 +61,7 @@ public class ExploreServiceImpl implements ExploreService {
             return vo;
         }).collect(Collectors.toList());
 
-        return PageResult.of(list, postPage.getTotal(), page, pageSize);
+        return PageResult.of(list, (long) candidates.size(), finalPage, finalPageSize);
     }
 
     @Override

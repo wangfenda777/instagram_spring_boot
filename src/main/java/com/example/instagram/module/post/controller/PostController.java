@@ -46,9 +46,9 @@ public class PostController {
     @Operation(summary = "获取首页帖子 Feed 流")
     @GetMapping("/feed")
     public Result<PageResult<PostFeedVO>> pagePostFeed(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "10") Integer pageSize) {
-        return Result.success(postService.pagePostFeed(page, pageSize));
+            @RequestParam(defaultValue = "0") Long lastId,
+            @RequestParam(defaultValue = "6") Integer pageSize) {
+        return Result.success(postService.pagePostFeed(lastId, pageSize));
     }
 
     @Operation(summary = "获取帖子详情")

@@ -32,7 +32,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -136,19 +141,123 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public PageResult<PostFeedVO> pagePostFeed(Integer page, Integer pageSize) {
+    public PageResult<PostFeedVO> pagePostFeed(Long lastId, Integer pageSize) {
         Long currentUserId = UserContext.getCurrentUserId();
+        int finalPageSize = pageSize == null || pageSize <= 0 ? 6 : pageSize;
+        int candidateLimit = Math.max(15, finalPageSize * 2 + 3);
 
-        Page<Post> postPage = new Page<>(page, pageSize);
-        postMapper.selectPage(postPage, new LambdaQueryWrapper<Post>()
+        Set<Long> followUserIds = followMapper.selectList(new LambdaQueryWrapper<Follow>()
+                        .eq(Follow::getFollowerId, currentUserId))
+                .stream()
+                .map(Follow::getFollowingId)
+                .collect(Collectors.toSet());
+
+        Set<Long> likedPostIds = postLikeMapper.selectList(new LambdaQueryWrapper<PostLike>()
+                        .eq(PostLike::getUserId, currentUserId))
+                .stream()
+                .map(PostLike::getPostId)
+                .collect(Collectors.toSet());
+
+        Set<Long> savedPostIds = postSaveMapper.selectList(new LambdaQueryWrapper<PostSave>()
+                        .eq(PostSave::getUserId, currentUserId))
+                .stream()
+                .map(PostSave::getPostId)
+                .collect(Collectors.toSet());
+
+        Set<Long> excludedPostIds = new HashSet<>();
+        excludedPostIds.addAll(likedPostIds);
+        excludedPostIds.addAll(savedPostIds);
+
+        LambdaQueryWrapper<Post> candidateWrapper = new LambdaQueryWrapper<Post>()
                 .ne(Post::getUserId, currentUserId)
-                .orderByDesc(Post::getCreatedAt));
+                .orderByDesc(Post::getId)
+                .last("LIMIT " + candidateLimit);
+        if (lastId != null && lastId > 0) {
+            candidateWrapper.lt(Post::getId, lastId);
+        }
 
-        List<PostFeedVO> list = postPage.getRecords().stream()
+        List<Post> candidatePosts = postMapper.selectList(candidateWrapper);
+
+        List<Post> followPool = candidatePosts.stream()
+                .filter(post -> followUserIds.contains(post.getUserId()))
+                .filter(post -> !excludedPostIds.contains(post.getId()))
+                .collect(Collectors.toList());
+        List<Post> recommendPool = candidatePosts.stream()
+                .filter(post -> !followUserIds.contains(post.getUserId()))
+                .filter(post -> !excludedPostIds.contains(post.getId()))
+                .collect(Collectors.toList());
+
+        int followTarget = Math.min(4, finalPageSize);
+        int recommendTarget = Math.max(0, finalPageSize - followTarget);
+
+        List<Post> selectedFollowPosts = selectTopPosts(followPool, followTarget, true);
+        Set<Long> selectedIds = selectedFollowPosts.stream()
+                .map(Post::getId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        if (selectedFollowPosts.size() < followTarget && !followUserIds.isEmpty()) {
+            List<Post> historyFollowPosts = postMapper.selectList(new LambdaQueryWrapper<Post>()
+                    .in(Post::getUserId, followUserIds)
+                    .ne(Post::getUserId, currentUserId)
+                    .orderByDesc(Post::getId));
+            for (Post post : historyFollowPosts) {
+                if (selectedFollowPosts.size() >= followTarget) {
+                    break;
+                }
+                if (excludedPostIds.contains(post.getId()) || selectedIds.contains(post.getId())) {
+                    continue;
+                }
+                selectedFollowPosts.add(post);
+                selectedIds.add(post.getId());
+            }
+        }
+
+        List<Post> selectedRecommendPosts = selectTopPosts(
+                recommendPool.stream()
+                        .filter(post -> !selectedIds.contains(post.getId()))
+                        .collect(Collectors.toList()),
+                recommendTarget,
+                false);
+        selectedRecommendPosts.forEach(post -> selectedIds.add(post.getId()));
+
+        if (selectedRecommendPosts.size() < recommendTarget) {
+            List<Post> hotPosts = postMapper.selectList(new LambdaQueryWrapper<Post>()
+                    .ne(Post::getUserId, currentUserId)
+                    .orderByDesc(Post::getLikesCount)
+                    .orderByDesc(Post::getSavedCount)
+                    .orderByDesc(Post::getCommentsCount)
+                    .orderByDesc(Post::getSharesCount)
+                    .orderByDesc(Post::getId));
+            for (Post post : hotPosts) {
+                if (selectedRecommendPosts.size() >= recommendTarget) {
+                    break;
+                }
+                if (excludedPostIds.contains(post.getId()) || selectedIds.contains(post.getId())) {
+                    continue;
+                }
+                selectedRecommendPosts.add(post);
+                selectedIds.add(post.getId());
+            }
+        }
+
+        List<Post> finalPosts = new ArrayList<>();
+        finalPosts.addAll(selectedFollowPosts);
+        finalPosts.addAll(selectedRecommendPosts);
+        finalPosts.sort(Comparator.comparing(Post::getId).reversed());
+
+        List<PostFeedVO> list = finalPosts.stream()
+                .limit(finalPageSize)
                 .map(post -> buildPostFeedVO(post, currentUserId))
                 .collect(Collectors.toList());
 
-        return PageResult.of(list, postPage.getTotal(), page, pageSize);
+        PageResult<PostFeedVO> result = new PageResult<>();
+        result.setList(list);
+        result.setTotal((long) list.size());
+        result.setPage(1);
+        result.setPageSize(finalPageSize);
+        result.setHasMore(candidatePosts.size() == candidateLimit);
+        result.setLastId(finalPosts.stream().map(Post::getId).min(Long::compareTo).orElse(0L));
+        return result;
     }
 
     @Override
@@ -262,6 +371,27 @@ public class PostServiceImpl implements PostService {
         vo.setIsSaved(false);
         vo.setSavedCount(post.getSavedCount());
         return vo;
+    }
+
+    private List<Post> selectTopPosts(List<Post> posts, int limit, boolean following) {
+        Comparator<Post> comparator = Comparator
+                .comparingLong((Post post) -> calculateScore(post, following))
+                .reversed()
+                .thenComparing(Post::getId, Comparator.reverseOrder());
+        return posts.stream()
+                .sorted(comparator)
+                .limit(limit)
+                .collect(Collectors.toList());
+    }
+
+    private long calculateScore(Post post, boolean following) {
+        long likes = post.getLikesCount() == null ? 0 : post.getLikesCount();
+        long saves = post.getSavedCount() == null ? 0 : post.getSavedCount();
+        long comments = post.getCommentsCount() == null ? 0 : post.getCommentsCount();
+        long shares = post.getSharesCount() == null ? 0 : post.getSharesCount();
+        long views = post.getViewsCount() == null ? 0 : post.getViewsCount();
+        long baseScore = likes + comments * 3 + saves * 4 + shares * 5 + views / 10;
+        return following ? baseScore + post.getId() : baseScore * 2 + post.getId();
     }
 
     private PostFeedVO buildPostFeedVO(Post post, Long currentUserId) {

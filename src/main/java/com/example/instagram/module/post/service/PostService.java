@@ -16,7 +16,7 @@ public interface PostService {
 
     void deletePost(PostIdDTO dto);
 
-    PageResult<PostFeedVO> pagePostFeed(Integer page, Integer pageSize);
+    PageResult<PostFeedVO> pagePostFeed(Long lastId, Integer pageSize);
 
     PostFeedVO getPostDetail(Long postId);
 

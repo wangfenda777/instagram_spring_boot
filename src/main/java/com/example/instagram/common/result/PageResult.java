@@ -12,6 +12,7 @@ public class PageResult<T> {
     private Integer page;
     private Integer pageSize;
     private Boolean hasMore;
+    private Long lastId;
 
     public static <T> PageResult<T> of(List<T> list, Long total, Integer page, Integer pageSize) {
         PageResult<T> result = new PageResult<>();
