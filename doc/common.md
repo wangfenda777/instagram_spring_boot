@@ -160,10 +160,23 @@
     "avatar": "https://cdn.example.com/avatar/2.jpg",
     "bio": "Professional footballer",
     "isVerified": true,
-    "isPrivate": false
+    "isPrivate": false,
+    "isFollowing": true
   }
 }
 ```
+
+### 响应字段说明
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| userId | string | 用户 ID |
+| username | string | 用户名 |
+| displayName | string | 显示名称 |
+| avatar | string | 头像 URL |
+| bio | string | 个人简介 |
+| isVerified | boolean | 是否认证 |
+| isPrivate | boolean | 是否私密账户 |
+| isFollowing | boolean | 当前登录用户是否已关注该用户 |
 
 ---
 

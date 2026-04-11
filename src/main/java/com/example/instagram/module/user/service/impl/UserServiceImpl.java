@@ -62,7 +62,12 @@ public class UserServiceImpl implements UserService {
         if (user == null) {
             throw BusinessException.notFound("用户不存在");
         }
-        return toUserInfoVO(user);
+        UserInfoVO vo = toUserInfoVO(user);
+        Long currentUserId = UserContext.getCurrentUserId();
+        vo.setIsFollowing(followMapper.selectCount(new LambdaQueryWrapper<Follow>()
+                .eq(Follow::getFollowerId, currentUserId)
+                .eq(Follow::getFollowingId, userId)) > 0);
+        return vo;
     }
 
     @Override

@@ -13,4 +13,5 @@ public class UserInfoVO {
     private Boolean isVerified;
     private Boolean isPrivate;
     private Boolean hasNotification;
+    private Boolean isFollowing;
 }
