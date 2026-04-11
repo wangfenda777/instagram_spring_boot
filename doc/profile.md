@@ -55,7 +55,116 @@
 
 ---
 
-## 2. 获取用户视频列表（Reels）
+## 2. 获取用户帖子详情列表（游标加载）
+
+### 请求信息
+- **接口地址**: `GET /api/user/posts/detail?userId=24&postId=100`
+- **接口说明**: 查询指定用户的帖子详情列表，以某条帖子为锚点。初次加载返回锚点帖子本身 + 比它更老的5条（共最多6条）；传 direction 时返回锚点之前或之后的5条。用于用户在个人主页网格点击帖子后，进入帖子详情滚动列表。
+
+### 请求头
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| Authorization | string | 是 | Bearer {token} |
+
+### 请求参数（Query）
+| 参数名 | 类型 | 必填 | 说明 | 默认值 |
+|-------|------|------|------|-------|
+| userId | number | 是 | 目标用户 ID | - |
+| postId | number | 是 | 锚点帖子 ID | - |
+| direction | string | 否 | 加载方向：不传 = 初次加载（锚点 + 更老的5条）；`before` = 往上加载更新的5条；`after` = 往下加载更老的5条 | - |
+
+### 三种使用方式
+
+**1. 初次加载（不传 direction）**
+
+```
+GET /api/user/posts/detail?userId=24&postId=100
+```
+
+返回：postId=100 这条帖子 + 比它更老的5条，最多6条，按 id 从大到小排列。
+
+**2. 往上加载（direction=before）**
+
+```
+GET /api/user/posts/detail?userId=24&postId=105&direction=before
+```
+
+返回：比 postId=105 更新的5条帖子（不含 postId=105 本身）。
+
+**3. 往下加载（direction=after）**
+
+```
+GET /api/user/posts/detail?userId=24&postId=95&direction=after
+```
+
+返回：比 postId=95 更老的5条帖子（不含 postId=95 本身）。
+
+### 响应数据
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": {
+    "list": [
+      {
+        "postId": "105",
+        "userId": "24",
+        "username": "arsenal",
+        "avatar": "https://cdn.example.com/avatar/2.jpg",
+        "isVerified": true,
+        "location": "London",
+        "content": "Match day!",
+        "mediaType": "image",
+        "mediaList": [
+          {
+            "url": "https://cdn.example.com/post/5.jpg",
+            "type": "image"
+          }
+        ],
+        "mediaCount": 1,
+        "likesCount": 120,
+        "savedCount": 30,
+        "commentsCount": 15,
+        "sharesCount": 5,
+        "isLiked": true,
+        "isSaved": false,
+        "tags": [],
+        "createdAt": 1711987200000
+      }
+    ],
+    "hasMore": true
+  }
+}
+```
+
+### 响应字段说明
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| postId | string | 帖子 ID |
+| userId | string | 发布者 ID |
+| username | string | 发布者用户名 |
+| avatar | string | 发布者头像 |
+| isVerified | boolean | 发布者是否认证 |
+| location | string | 位置信息 |
+| content | string | 帖子文字内容 |
+| mediaType | string | 媒体类型：image / video |
+| mediaList | array | 媒体列表 |
+| mediaCount | number | 媒体数量 |
+| likesCount | number | 点赞数 |
+| savedCount | number | 收藏数 |
+| commentsCount | number | 评论数 |
+| sharesCount | number | 分享数 |
+| isLiked | boolean | 当前用户是否已点赞 |
+| isSaved | boolean | 当前用户是否已收藏 |
+| tags | array | 标签列表 |
+| createdAt | number | 发布时间戳 |
+| hasMore | boolean | 是否还有更多数据可加载 |
+
+> 注：此接口不返回 `isFollowing` 字段（因为都是同一个用户的帖子）。
+
+---
+
+## 3. 获取用户视频列表（Reels）
 
 ### 请求信息
 - **接口地址**: `GET /api/user/reels?userId=1001&page=1&pageSize=18`
@@ -100,7 +209,7 @@
 
 ---
 
-## 3. 获取用户粉丝列表
+## 4. 获取用户粉丝列表
 
 ### 请求信息
 - **接口地址**: `GET /api/user/followers?userId=1001&page=1&pageSize=20`
@@ -162,7 +271,7 @@
 
 ---
 
-## 4. 获取用户关注列表
+## 5. 获取用户关注列表
 
 ### 请求信息
 - **接口地址**: `GET /api/user/following?userId=1001&page=1&pageSize=20`
@@ -224,7 +333,7 @@
 
 ---
 
-## 5. 获取推荐用户列表
+## 6. 获取推荐用户列表
 
 ### 请求信息
 - **接口地址**: `GET /api/user/discover?limit=10`

@@ -394,7 +394,8 @@ public class PostServiceImpl implements PostService {
         return following ? baseScore + post.getId() : baseScore * 2 + post.getId();
     }
 
-    private PostFeedVO buildPostFeedVO(Post post, Long currentUserId) {
+    @Override
+    public PostFeedVO buildPostFeedVO(Post post, Long currentUserId) {
         User user = userMapper.selectById(post.getUserId());
 
         PostFeedVO vo = new PostFeedVO();

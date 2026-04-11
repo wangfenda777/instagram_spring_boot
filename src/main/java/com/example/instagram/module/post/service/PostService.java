@@ -4,6 +4,7 @@ import com.example.instagram.common.result.PageResult;
 import com.example.instagram.module.post.dto.PostCreateDTO;
 import com.example.instagram.module.post.dto.PostIdDTO;
 import com.example.instagram.module.post.dto.PostUpdateDTO;
+import com.example.instagram.module.post.entity.Post;
 import com.example.instagram.module.post.vo.PostFeedVO;
 import com.example.instagram.module.post.vo.PostLikeVO;
 import com.example.instagram.module.post.vo.PostSaveVO;
@@ -27,4 +28,6 @@ public interface PostService {
     PostSaveVO savePost(PostIdDTO dto);
 
     PostSaveVO unsavePost(PostIdDTO dto);
+
+    PostFeedVO buildPostFeedVO(Post post, Long currentUserId);
 }

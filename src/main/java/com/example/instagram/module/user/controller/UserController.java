@@ -2,6 +2,7 @@ package com.example.instagram.module.user.controller;
 
 import com.example.instagram.common.result.PageResult;
 import com.example.instagram.common.result.Result;
+import com.example.instagram.module.post.vo.PostFeedVO;
 import com.example.instagram.module.user.dto.UpdateProfileDTO;
 import com.example.instagram.module.user.service.UserService;
 import com.example.instagram.module.user.vo.*;
@@ -60,6 +61,15 @@ public class UserController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "18") Integer pageSize) {
         return Result.success(userService.listUserReels(userId, page, pageSize));
+    }
+
+    @Operation(summary = "获取用户帖子详情列表（游标加载）")
+    @GetMapping("/posts/detail")
+    public Result<PageResult<PostFeedVO>> listUserPostsDetail(
+            @RequestParam Long userId,
+            @RequestParam Long postId,
+            @RequestParam(required = false) String direction) {
+        return Result.success(userService.listUserPostsDetail(userId, postId, direction));
     }
 
     @Operation(summary = "获取推荐用户列表")

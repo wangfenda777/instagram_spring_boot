@@ -11,6 +11,8 @@ import com.example.instagram.module.notification.mapper.NotificationMapper;
 import com.example.instagram.module.notification.entity.Notification;
 import com.example.instagram.module.post.entity.Post;
 import com.example.instagram.module.post.mapper.PostMapper;
+import com.example.instagram.module.post.service.PostService;
+import com.example.instagram.module.post.vo.PostFeedVO;
 import com.example.instagram.module.user.dto.UpdateProfileDTO;
 import com.example.instagram.module.user.entity.User;
 import com.example.instagram.module.user.mapper.UserMapper;
@@ -32,6 +34,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PostMapper postMapper;
+
+    @Autowired
+    private PostService postService;
 
     @Autowired
     private FollowMapper followMapper;
@@ -172,6 +177,65 @@ public class UserServiceImpl implements UserService {
             vo.setIsFollowing(false);
             return vo;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public PageResult<PostFeedVO> listUserPostsDetail(Long userId, Long postId, String direction) {
+        Long currentUserId = UserContext.getCurrentUserId();
+
+        List<Post> posts;
+        boolean hasMore;
+
+        if (direction == null || direction.isEmpty()) {
+            // 初次加载：本条 + 比它更老的5条
+            Post currentPost = postMapper.selectById(postId);
+
+            List<Post> afterPosts = postMapper.selectList(new LambdaQueryWrapper<Post>()
+                    .eq(Post::getUserId, userId)
+                    .lt(Post::getId, postId)
+                    .orderByDesc(Post::getId)
+                    .last("LIMIT 5"));
+
+            posts = new ArrayList<>();
+            if (currentPost != null && currentPost.getUserId().equals(userId)) {
+                posts.add(currentPost);
+            }
+            posts.addAll(afterPosts);
+
+            hasMore = afterPosts.size() == 5;
+
+        } else if ("before".equalsIgnoreCase(direction)) {
+            // 往上加载：比 postId 更新的5条
+            posts = postMapper.selectList(new LambdaQueryWrapper<Post>()
+                    .eq(Post::getUserId, userId)
+                    .gt(Post::getId, postId)
+                    .orderByAsc(Post::getId)
+                    .last("LIMIT 5"));
+            java.util.Collections.reverse(posts);
+            hasMore = posts.size() == 5;
+
+        } else {
+            // 往下加载：比 postId 更老的5条
+            posts = postMapper.selectList(new LambdaQueryWrapper<Post>()
+                    .eq(Post::getUserId, userId)
+                    .lt(Post::getId, postId)
+                    .orderByDesc(Post::getId)
+                    .last("LIMIT 5"));
+            hasMore = posts.size() == 5;
+        }
+
+        List<PostFeedVO> list = posts.stream()
+                .map(post -> {
+                    PostFeedVO vo = postService.buildPostFeedVO(post, currentUserId);
+                    vo.setIsFollowing(null);
+                    return vo;
+                })
+                .collect(Collectors.toList());
+
+        PageResult<PostFeedVO> result = new PageResult<>();
+        result.setList(list);
+        result.setHasMore(hasMore);
+        return result;
     }
 
     private UserInfoVO toUserInfoVO(User user) {
