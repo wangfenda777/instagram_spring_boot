@@ -75,7 +75,7 @@ public class PostServiceImpl implements PostService {
         post.setLocation(dto.getLocation());
         post.setMediaType(dto.getMediaType());
         post.setMediaCount(dto.getMediaUrls().size());
-        post.setCoverUrl(dto.getMediaUrls().get(0));
+        post.setCoverUrl(dto.getCoverUrl() != null ? dto.getCoverUrl() : dto.getMediaUrls().get(0));
         post.setLikesCount(0);
         post.setSavedCount(0);
         post.setCommentsCount(0);

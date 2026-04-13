@@ -21,6 +21,9 @@ public class PostCreateDTO {
     @Schema(description = "媒体类型: image/video")
     private String mediaType;
 
+    @Schema(description = "封面图URL（视频帖子使用）")
+    private String coverUrl;
+
     @NotEmpty(message = "媒体列表不能为空")
     @Schema(description = "媒体URL列表")
     private List<String> mediaUrls;
