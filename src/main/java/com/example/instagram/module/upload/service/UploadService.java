@@ -6,4 +6,6 @@ import org.springframework.web.multipart.MultipartFile;
 public interface UploadService {
 
     UploadVO uploadImage(MultipartFile file);
+
+    UploadVO uploadVideo(MultipartFile file);
 }

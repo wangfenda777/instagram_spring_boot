@@ -86,9 +86,6 @@ public class PostServiceImpl implements PostService {
         post.setUpdatedAt(LocalDateTime.now());
         postMapper.insert(post);
 
-        // 重新查询获取数据库生成的时间戳
-        post = postMapper.selectById(post.getId());
-
         for (int i = 0; i < dto.getMediaUrls().size(); i++) {
             PostMedia media = new PostMedia();
             media.setPostId(post.getId());

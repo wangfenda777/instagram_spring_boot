@@ -561,7 +561,7 @@
   "code": 200,
   "message": "上传成功",
   "data": {
-    "url": "/uploads/a1b2c3d4e5f6.jpg",
+    "url": "/uploads/images/a1b2c3d4e5f6.jpg",
     "originalName": "photo.jpg"
   }
 }
@@ -572,6 +572,52 @@
 |-------|------|------|
 | url | string | 文件访问路径，可直接拼接域名访问 |
 | originalName | string | 原始文件名 |
+
+---
+
+## 17. 上传视频
+
+### 请求信息
+- **接口地址**: `POST /api/upload/video`
+- **接口说明**: 上传视频文件，支持 mp4/mov/avi/webm 格式，文件大小不超过 50MB。上传成功后返回视频访问 URL，可用于发布帖子等场景。
+
+### 请求头
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| Authorization | string | 是 | Bearer {token} |
+| Content-Type | string | 是 | multipart/form-data |
+
+### 请求参数（form-data）
+| 参数名 | 类型 | 必填 | 说明 |
+|-------|------|------|------|
+| file | file | 是 | 视频文件（mp4/mov/avi/webm），最大 50MB |
+
+### 响应数据
+```json
+{
+  "code": 200,
+  "message": "上传成功",
+  "data": {
+    "url": "/uploads/videos/a1b2c3d4e5f6.mp4",
+    "originalName": "video.mp4"
+  }
+}
+```
+
+### 响应字段说明
+| 字段名 | 类型 | 说明 |
+|-------|------|------|
+| url | string | 文件访问路径，可直接拼接域名访问 |
+| originalName | string | 原始文件名 |
+
+### 错误示例
+```json
+{
+  "code": 400,
+  "message": "仅支持 mp4/mov/avi/webm 格式的视频",
+  "data": null
+}
+```
 
 ---
 

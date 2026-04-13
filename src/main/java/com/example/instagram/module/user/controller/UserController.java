@@ -50,8 +50,9 @@ public class UserController {
     public Result<PageResult<UserPostGridVO>> listUserPosts(
             @RequestParam Long userId,
             @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "18") Integer pageSize) {
-        return Result.success(userService.listUserPosts(userId, page, pageSize));
+            @RequestParam(defaultValue = "18") Integer pageSize,
+            @RequestParam(required = false) String mediaType) {
+        return Result.success(userService.listUserPosts(userId, page, pageSize, mediaType));
     }
 
     @Operation(summary = "获取用户视频列表")

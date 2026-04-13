@@ -23,4 +23,10 @@ public class UploadController {
     public Result<UploadVO> uploadImage(@RequestPart("file") MultipartFile file) {
         return Result.success("上传成功", uploadService.uploadImage(file));
     }
+
+    @Operation(summary = "上传视频")
+    @PostMapping(value = "/video", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public Result<UploadVO> uploadVideo(@RequestPart("file") MultipartFile file) {
+        return Result.success("上传成功", uploadService.uploadVideo(file));
+    }
 }

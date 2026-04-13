@@ -17,7 +17,7 @@ public interface UserService {
 
     UserInfoVO updateProfile(UpdateProfileDTO dto);
 
-    PageResult<UserPostGridVO> listUserPosts(Long userId, Integer page, Integer pageSize);
+    PageResult<UserPostGridVO> listUserPosts(Long userId, Integer page, Integer pageSize, String mediaType);
 
     PageResult<UserReelVO> listUserReels(Long userId, Integer page, Integer pageSize);
 

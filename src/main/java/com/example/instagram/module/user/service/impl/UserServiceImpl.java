@@ -113,10 +113,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PageResult<UserPostGridVO> listUserPosts(Long userId, Integer page, Integer pageSize) {
+    public PageResult<UserPostGridVO> listUserPosts(Long userId, Integer page, Integer pageSize, String mediaType) {
         Page<Post> postPage = new Page<>(page, pageSize);
         postMapper.selectPage(postPage, new LambdaQueryWrapper<Post>()
                 .eq(Post::getUserId, userId)
+                .eq(mediaType != null && !mediaType.isEmpty(), Post::getMediaType, mediaType)
                 .orderByDesc(Post::getCreatedAt));
 
         List<UserPostGridVO> list = postPage.getRecords().stream().map(post -> {
