@@ -188,9 +188,18 @@ public class UserServiceImpl implements UserService {
         boolean hasMore;
 
         if (direction == null || direction.isEmpty()) {
-            // 初次加载：本条 + 比它更老的5条
+            // 初次加载：前5条 + 本条 + 后5条
             Post currentPost = postMapper.selectById(postId);
 
+            // 查询比当前帖子更新的5条（前5条）
+            List<Post> beforePosts = postMapper.selectList(new LambdaQueryWrapper<Post>()
+                    .eq(Post::getUserId, userId)
+                    .gt(Post::getId, postId)
+                    .orderByAsc(Post::getId)
+                    .last("LIMIT 5"));
+            java.util.Collections.reverse(beforePosts);
+
+            // 查询比当前帖子更老的5条（后5条）
             List<Post> afterPosts = postMapper.selectList(new LambdaQueryWrapper<Post>()
                     .eq(Post::getUserId, userId)
                     .lt(Post::getId, postId)
@@ -198,6 +207,7 @@ public class UserServiceImpl implements UserService {
                     .last("LIMIT 5"));
 
             posts = new ArrayList<>();
+            posts.addAll(beforePosts);
             if (currentPost != null && currentPost.getUserId().equals(userId)) {
                 posts.add(currentPost);
             }

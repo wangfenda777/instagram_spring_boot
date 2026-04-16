@@ -64,7 +64,8 @@ public class UserController {
         return Result.success(userService.listUserReels(userId, page, pageSize));
     }
 
-    @Operation(summary = "获取用户帖子详情列表（游标加载）")
+    @Operation(summary = "获取用户帖子详情列表（游标加载）",
+            description = "不传direction时返回当前帖子+前5条+后5条（最多11条）；传direction=before向上加载5条，direction=after向下加载5条")
     @GetMapping("/posts/detail")
     public Result<PageResult<PostFeedVO>> listUserPostsDetail(
             @RequestParam Long userId,
