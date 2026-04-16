@@ -34,6 +34,7 @@ public class UploadServiceImpl implements UploadService {
             ".mp4", ".mov", ".avi", ".webm"
     );
 
+    private static final long MAX_IMAGE_SIZE = 10L * 1024 * 1024; // 10MB
     private static final long MAX_VIDEO_SIZE = 50L * 1024 * 1024; // 50MB
 
     @Override
@@ -45,6 +46,10 @@ public class UploadServiceImpl implements UploadService {
         String originalName = file.getOriginalFilename();
         if (originalName == null || !hasAllowedExtension(originalName, ALLOWED_IMAGE_EXTENSIONS)) {
             throw BusinessException.badRequest("仅支持 jpg/png/gif/webp 格式的图片");
+        }
+
+        if (file.getSize() > MAX_IMAGE_SIZE) {
+            throw BusinessException.badRequest("图片文件不能超过 10MB");
         }
 
         return saveFile(file, "images");
